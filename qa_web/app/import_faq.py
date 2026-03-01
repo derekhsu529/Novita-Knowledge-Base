@@ -1,6 +1,6 @@
 """
 FAQ 种子数据 - Novita AI
-来源: FAQ-Novita.pdf (38条)
+来源: FAQ-Novita.pdf (38条中文原文)
 """
 
 import sqlite3
@@ -10,203 +10,201 @@ BASE_DIR = Path(__file__).parent.parent
 DB_PATH = BASE_DIR / "data" / "qa.db"
 
 FAQ_DATA = [
-    # 一、Account & Registration (Q1-Q5)
+    # 一、账户与计费类 (Q1-Q7)
     {
-        "category": "Account",
-        "question": "How do I create a Novita AI account?",
-        "answer": "Visit novita.ai, click Sign Up, and register with your email. You'll receive free credits to explore AI models upon registration."
+        "category": "账户与计费",
+        "question": "如何删除我的账户？",
+        "answer": "提供您的Novita账户ID或邮箱，我们将在14天内删除您的账户。"
     },
     {
-        "category": "Account",
-        "question": "Do I get free credits after signing up?",
-        "answer": "Yes. New users receive complimentary trial credits to access various AI model APIs including DeepSeek, Llama, Qwen, Gemini, and more. Check novita.ai for the exact amount."
+        "category": "账户与计费",
+        "question": "账户余额为负时能否使用Coding Plan？",
+        "answer": "不能。账户余额必须大于0才能使用Coding Plan，即使您已购买套餐。"
     },
     {
-        "category": "Account",
-        "question": "How do I get my API key?",
-        "answer": "Log in to Novita AI, navigate to Settings > Key Management (novita.ai/settings/key-management), and click Create New Key. Keep your API key secure."
+        "category": "账户与计费",
+        "question": "为什么我的$1代金券消失了？",
+        "answer": "系统检测到异常注册活动（如恶意注册、同一设备多账号等）会自动撤销代金券。如确认正常使用，可联系客服重新发放。"
     },
     {
-        "category": "Account",
-        "question": "What if I forget my password?",
-        "answer": "Click Forgot Password on the login page and follow the email verification process to reset your password."
+        "category": "账户与计费",
+        "question": "如何修改账户邮箱？",
+        "answer": "提供原邮箱和新邮箱，客服可协助修改。"
     },
     {
-        "category": "Account",
-        "question": "Can I have multiple API keys?",
-        "answer": "Yes. You can create multiple API keys for different projects or environments from the Key Management page. Each key can be independently revoked."
-    },
-    # 二、Billing & Pricing (Q6-Q10)
-    {
-        "category": "Billing",
-        "question": "How do I add funds?",
-        "answer": "Log in and go to the Billing page. Novita AI supports credit card and other payment methods. Funds are available immediately."
+        "category": "账户与计费",
+        "question": "支持哪些支付方式？",
+        "answer": "支持信用卡（Stripe）、PayPal（需7个工作日手动处理）。不支持加密货币。"
     },
     {
-        "category": "Billing",
-        "question": "How does billing work?",
-        "answer": "Billing is token-based (pay-as-you-go). Different models have different per-token prices. Check novita.ai/pricing for input/output rates per model."
+        "category": "账户与计费",
+        "question": "如何查看发票？",
+        "answer": "支付成功后收据链接30天内有效。如过期，可联系客服提供订单号重新发送。"
     },
     {
-        "category": "Billing",
-        "question": "Can I get a refund?",
-        "answer": "Refunds are generally not available after payment. We recommend using the free credits first. For special circumstances, contact support via Discord."
+        "category": "账户与计费",
+        "question": "充值后能否退款？",
+        "answer": "一般情况下不支持退款。特殊情况下（如服务完全不可用）可申请退款，通常在每月10-15日处理。"
+    },
+    # 二、LLM API使用类 (Q8-Q17)
+    {
+        "category": "LLM API",
+        "question": "Coding Plan的扣费顺序是怎样的？",
+        "answer": "优先扣除Coding Plan额度，用尽后才扣除API账户余额。"
     },
     {
-        "category": "Billing",
-        "question": "How do I check my usage?",
-        "answer": "Log in to the Console (novita.ai/console) to see detailed API call records including model, token count, and cost per request."
+        "category": "LLM API",
+        "question": "套餐内50M Token是如何计算的？",
+        "answer": "按基础费率等效Token计算，不同模型价格不同，具体权重取决于价格比例。输入/输出Token均计入。"
     },
     {
-        "category": "Billing",
-        "question": "Are there volume discounts?",
-        "answer": "For high-volume usage, contact our sales team through Discord (discord.gg/YyPRAzwp7P) to discuss custom pricing plans."
-    },
-    # 三、API Usage (Q11-Q16)
-    {
-        "category": "API",
-        "question": "What is the Novita AI API base URL?",
-        "answer": "The API base URL is:\n- OpenAI-compatible: `https://api.novita.ai/openai/v1`\n\nSet this as the `base_url` in your SDK."
+        "category": "LLM API",
+        "question": "缓存Token如何计费？",
+        "answer": "缓存读取Token有单独价格，约为普通输入Token的1/10（具体视模型而定）。缓存写入按正常输入计费。"
     },
     {
-        "category": "API",
-        "question": "What AI models are supported?",
-        "answer": "Novita AI supports 100+ models including:\n- **DeepSeek**: V3, R1\n- **Meta Llama**: 3.1, 3.3\n- **Qwen**: 2.5, QwQ-32B\n- **Google Gemini**: 2.0 Flash\n- **Mistral**: Large, Small\n- **Image**: FLUX, Stable Diffusion\n\nFull list at novita.ai/models."
+        "category": "LLM API",
+        "question": "如何提升RPM（每分钟请求数）限制？",
+        "answer": "自动升级：根据近3个月充值金额自动提升等级（T1-T5）。\n手动申请：联系客服，根据实际使用量调整。"
     },
     {
-        "category": "API",
-        "question": "How do I call the API with OpenAI SDK?",
-        "answer": "Simply change base_url and api_key:\n\n```python\nfrom openai import OpenAI\n\nclient = OpenAI(\n    base_url=\"https://api.novita.ai/openai/v1\",\n    api_key=\"your_novita_api_key\"\n)\n\nresponse = client.chat.completions.create(\n    model=\"deepseek/deepseek-v3-0324\",\n    messages=[{\"role\": \"user\", \"content\": \"Hello\"}]\n)\nprint(response.choices[0].message.content)\n```"
+        "category": "LLM API",
+        "question": "哪些模型支持1M上下文？",
+        "answer": "pa/claude-sonnet-4-6 和 pa/claude-opus-4-6 支持1M上下文，使用方式与Claude Sonnet 4.5相同，需添加header `anthropic-beta: context-1m-2025-08-07`。"
     },
     {
-        "category": "API",
-        "question": "How do I use streaming?",
-        "answer": "Use `stream=True`:\n\n```python\nstream = client.chat.completions.create(\n    model=\"deepseek/deepseek-v3-0324\",\n    messages=[{\"role\": \"user\", \"content\": \"Tell me a story\"}],\n    stream=True\n)\nfor chunk in stream:\n    if chunk.choices[0].delta.content:\n        print(chunk.choices[0].delta.content, end=\"\")\n```"
+        "category": "LLM API",
+        "question": "如何关闭模型的思考模式（thinking）？",
+        "answer": "Kimi K2.5：使用参数 `\"enable_thinking\": false`\nMiniMax M2.5：暂不支持关闭思考模式"
     },
     {
-        "category": "API",
-        "question": "API returns 401 - what should I do?",
-        "answer": "HTTP 401 means authentication failed. Check:\n1. API Key is correct (no extra spaces)\n2. API Key is not expired or revoked\n3. Account has sufficient balance\n4. base_url is correctly configured\n\nTry regenerating a new API Key if the issue persists."
+        "category": "LLM API",
+        "question": "为什么调用某些模型报403错误？",
+        "answer": "可能原因：1) 余额不足；2) 模型需要加白名单（如Claude系列）；3) 使用了套餐外模型。"
     },
     {
-        "category": "API",
-        "question": "API returns 429 - what should I do?",
-        "answer": "HTTP 429 means rate limit exceeded. Solutions:\n1. Reduce request frequency with delays\n2. Use exponential backoff retry\n3. Contact support on Discord for higher limits: discord.gg/YyPRAzwp7P"
-    },
-    # 四、Models (Q17-Q22)
-    {
-        "category": "Models",
-        "question": "What are the differences between models?",
-        "answer": "Key model characteristics:\n- **DeepSeek-V3/R1**: Strong reasoning and coding\n- **Llama 3.3**: Good general-purpose, open source\n- **Qwen2.5**: Strong multilingual support\n- **Gemini 2.0 Flash**: Fast, vision + long context (1M tokens)\n- **Mistral Large**: Strong European languages\n\nChoose based on your use case. Details at novita.ai/models."
+        "category": "LLM API",
+        "question": "是否支持top_logprobs参数？",
+        "answer": "目前可能不支持该参数。"
     },
     {
-        "category": "Models",
-        "question": "What are the context length limits?",
-        "answer": "Context lengths vary by model:\n- DeepSeek-V3: 128K tokens\n- Llama 3.3: 128K tokens\n- Qwen2.5: 128K tokens\n- Gemini 2.0 Flash: 1M tokens\n- Mistral Large: 128K tokens\n\nLonger context = higher cost per call."
+        "category": "LLM API",
+        "question": "是否支持结构化输出（structured outputs）？",
+        "answer": "目前仅支持 `\"type\": \"json_object\"`，不支持 `\"type\": \"json_schema\"`。"
     },
     {
-        "category": "Models",
-        "question": "Which models support vision/multimodal input?",
-        "answer": "Models with vision support:\n- Google Gemini 2.0 Flash\n- Other vision models as listed at novita.ai/models\n\nPass images as base64 data or URLs in the messages parameter."
+        "category": "LLM API",
+        "question": "为什么我的请求报400错误？",
+        "answer": "常见原因：输入长度超过模型上下文限制、参数格式错误、缺少必填字段等。可提供trace_id给客服查询。"
+    },
+    # 三、GPU实例类 (Q18-Q25)
+    {
+        "category": "GPU实例",
+        "question": "如何创建多GPU实例（如5x A100）？",
+        "answer": "在创建页面直接选择GPU数量即可。"
     },
     {
-        "category": "Models",
-        "question": "How do I use tool calling / function calling?",
-        "answer": "Novita AI supports OpenAI-compatible tool calling:\n```python\nresponse = client.chat.completions.create(\n    model=\"deepseek/deepseek-v3-0324\",\n    messages=[{\"role\": \"user\", \"content\": \"What's the weather?\"}],\n    tools=[{\n        \"type\": \"function\",\n        \"function\": {\n            \"name\": \"get_weather\",\n            \"parameters\": {\"type\": \"object\", \"properties\": {\"location\": {\"type\": \"string\"}}}\n        }\n    }]\n)\n```"
+        "category": "GPU实例",
+        "question": "实例无法启动怎么办？",
+        "answer": "尝试迁移实例；如无迁移选项，联系客服处理。"
     },
     {
-        "category": "Models",
-        "question": "How do I use JSON mode?",
-        "answer": "Set `response_format={\"type\": \"json_object\"}`:\n```python\nresponse = client.chat.completions.create(\n    model=\"deepseek/deepseek-v3-0324\",\n    messages=[{\"role\": \"user\", \"content\": \"List 3 colors as JSON\"}],\n    response_format={\"type\": \"json_object\"}\n)\n```"
+        "category": "GPU实例",
+        "question": "SSH连接失败但实例状态正常？",
+        "answer": "可能是本地VSCode配置问题，尝试用终端直接SSH连接。"
     },
     {
-        "category": "Models",
-        "question": "How do I get the latest model list?",
-        "answer": "Fetch live model data via API:\n```bash\ncurl https://api.novita.ai/openai/v1/models \\\n  -H \"Authorization: Bearer $NOVITA_API_KEY\"\n```\nOr visit novita.ai/models for the web catalog."
-    },
-    # 五、Integration (Q23-Q28)
-    {
-        "category": "Integration",
-        "question": "How do I use Novita AI in Cursor?",
-        "answer": "1. Open Cursor Settings → Models\n2. Set API Base URL to `https://api.novita.ai/openai/v1`\n3. Enter your Novita AI API Key\n4. Select a model (e.g., `deepseek/deepseek-v3-0324`)"
+        "category": "GPU实例",
+        "question": "实例停止后数据保留多久？",
+        "answer": "停止状态的实例数据保留7天，期间按$0.005/GB/天收取存储费。7天后自动删除且无法恢复。"
     },
     {
-        "category": "Integration",
-        "question": "How do I use Novita AI in Continue (VS Code)?",
-        "answer": "Add to `~/.continue/config.json`:\n```json\n{\n  \"models\": [{\n    \"title\": \"Novita AI\",\n    \"provider\": \"openai\",\n    \"model\": \"deepseek/deepseek-v3-0324\",\n    \"apiBase\": \"https://api.novita.ai/openai/v1\",\n    \"apiKey\": \"your_key\"\n  }]\n}\n```"
+        "category": "GPU实例",
+        "question": "能否通过API启动/停止Web Terminal？",
+        "answer": "目前不支持，只能通过控制台手动操作。"
     },
     {
-        "category": "Integration",
-        "question": "How do I use Novita AI with LangChain?",
-        "answer": "```python\nfrom langchain_openai import ChatOpenAI\n\nllm = ChatOpenAI(\n    base_url=\"https://api.novita.ai/openai/v1\",\n    api_key=\"your_key\",\n    model=\"deepseek/deepseek-v3-0324\"\n)\nresponse = llm.invoke(\"Hello!\")\n```"
+        "category": "GPU实例",
+        "question": "如何扩容本地存储？",
+        "answer": "联系客服提供实例IP和所需容量（如30TB/60TB），获取报价。"
     },
     {
-        "category": "Integration",
-        "question": "How do I use Novita AI with LlamaIndex?",
-        "answer": "```python\nfrom llama_index.llms.openai_like import OpenAILike\n\nllm = OpenAILike(\n    api_base=\"https://api.novita.ai/openai/v1\",\n    api_key=\"your_key\",\n    model=\"deepseek/deepseek-v3-0324\"\n)\nresponse = llm.complete(\"Hello!\")\n```"
+        "category": "GPU实例",
+        "question": "月付实例能否更换IP/URL？",
+        "answer": "不支持直接更换。如需新实例，需先退订当前月付实例。"
     },
     {
-        "category": "Integration",
-        "question": "How do I set up observability with Langfuse?",
-        "answer": "Novita AI works with Langfuse for monitoring:\n1. Set up a Langfuse account\n2. Use Langfuse's SDK wrapper around your Novita AI calls\n3. Monitor latency, token usage, and costs in the Langfuse dashboard"
+        "category": "GPU实例",
+        "question": "为什么下载速度很慢？",
+        "answer": "检查是否使用了国内镜像源（如清华源）。海外服务器建议使用官方源。"
+    },
+    # 四、图像/视频生成类 (Q26-Q30)
+    {
+        "category": "图像/视频生成",
+        "question": "Flux 2 Pro API报错\"failed to exec task\"怎么办？",
+        "answer": "可能是内容审核触发或资源不足。检查提示词是否包含敏感内容，或联系客服确认资源状态。"
     },
     {
-        "category": "Integration",
-        "question": "What other tools are supported?",
-        "answer": "Most OpenAI-compatible tools work with Novita AI. Common integrations:\n- **IDE**: Cursor, Continue, Cline\n- **Frameworks**: LangChain, LlamaIndex\n- **Chat UI**: ChatBox, NextChat, LobeChat, Open WebUI\n- **Observability**: Langfuse, Helicone\n\nGeneral setup: set Base URL to `https://api.novita.ai/openai/v1` and enter your API key."
-    },
-    # 六、GPU (Q29-Q32)
-    {
-        "category": "GPU",
-        "question": "What GPU types are available?",
-        "answer": "Novita AI offers:\n- **GPU Instance** (dedicated): NVIDIA A100, H100, L40S, RTX 4090\n- **Serverless GPU**: Pay-per-use, auto-scaling\n\nPricing at novita.ai/pricing."
+        "category": "图像/视频生成",
+        "question": "如何禁用NSFW过滤？",
+        "answer": "WAN2.2 I2V模型：在请求头中添加 `X-DashScope-DataInspection: {\"input\": \"disable\", \"output\": \"disable\"}`"
     },
     {
-        "category": "GPU",
-        "question": "GPU Instance vs Serverless GPU?",
-        "answer": "**GPU Instance**: Best for training, fine-tuning, persistent workloads. Full SSH access, billed per hour.\n\n**Serverless GPU**: Best for inference, burst workloads. Auto-scaling, pay per compute time.\n\nChoose Instance for consistent loads, Serverless for variable demand."
+        "category": "图像/视频生成",
+        "question": "Seedream 4.5支持哪些尺寸？",
+        "answer": "最小尺寸为1920x1920（约368万像素），不支持更小尺寸。"
     },
     {
-        "category": "GPU",
-        "question": "How do I launch a GPU Instance?",
-        "answer": "1. Log in to novita.ai/console\n2. Go to GPU Instances\n3. Select GPU type (A100, H100, etc.)\n4. Choose a template or custom Docker image\n5. Configure storage and networking\n6. Launch\n\nDocs: novita.ai/docs/guides/gpu-instance-overview"
+        "category": "图像/视频生成",
+        "question": "为什么视频生成任务失败报500错误？",
+        "answer": "常见原因：参数错误（如video_url为空）、资源不足、官方服务波动。建议检查请求体完整性。"
     },
     {
-        "category": "GPU",
-        "question": "What are the GPU pricing tiers?",
-        "answer": "GPU pricing varies by type and commitment:\n- On-demand: Pay per hour\n- Reserved: Discounted rates for longer commitments\n\nCheck novita.ai/pricing for current rates. Contact sales on Discord for custom plans."
+        "category": "图像/视频生成",
+        "question": "Kling Motion Control计费问题？",
+        "answer": "计费基于实际使用时长，无额外基础费用。如费用异常，提供账户信息给客服核查。"
     },
-    # 七、Sandbox (Q33-Q35)
+    # 五、Serverless类 (Q31-Q33)
     {
-        "category": "Sandbox",
-        "question": "What is Agent Sandbox?",
-        "answer": "Cloud-based isolated environments for AI agents to safely execute code, browse the web, and manage files. Features:\n- SDK and CLI access\n- Pre-built templates (Python, Node.js)\n- File upload/download\n- Lifecycle management\n\nDocs: novita.ai/docs/guides/sandbox-overview"
-    },
-    {
-        "category": "Sandbox",
-        "question": "How do I create a sandbox?",
-        "answer": "Via REST API:\n```bash\ncurl -X POST https://api.novita.ai/v1/sandboxes \\\n  -H \"Authorization: Bearer YOUR_API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"template\": \"python-3.11\", \"name\": \"my-sandbox\"}'\n```\n\nSee novita.ai/docs/guides/sandbox-overview for SDK usage."
+        "category": "Serverless",
+        "question": "Serverless端点初始化状态持续很久？",
+        "answer": "检查日志是否有错误；如资源不足（如L40S库存不足），建议切换到sync端点或其他区域。"
     },
     {
-        "category": "Sandbox",
-        "question": "What templates are available?",
-        "answer": "Pre-built templates include:\n- Python 3.11\n- Node.js\n- Custom Docker images\n\nTemplates come with common tools pre-installed. Check the docs for the latest list."
-    },
-    # 八、Support (Q36-Q38)
-    {
-        "category": "Support",
-        "question": "How do I contact support?",
-        "answer": "Reach Novita AI support:\n- **Discord**: discord.gg/YyPRAzwp7P\n- **Docs**: novita.ai/docs\n- **Console**: novita.ai/console"
+        "category": "Serverless",
+        "question": "如何查看Serverless日志？",
+        "answer": "目前不支持编程方式流式查看日志，只能通过控制台查看。"
     },
     {
-        "category": "Support",
-        "question": "Is there technical documentation?",
-        "answer": "Yes. Full docs at novita.ai/docs including:\n- Quick start guide\n- API reference\n- Model details\n- Code examples (Python, JavaScript, cURL)\n- FAQ & troubleshooting"
+        "category": "Serverless",
+        "question": "能否在不同区域查看GPU可用性？",
+        "answer": "目前无法直接查看各区域GPU库存，可尝试创建或联系客服确认。"
+    },
+    # 六、其他常见问题 (Q34-Q38)
+    {
+        "category": "其他",
+        "question": "是否支持ComfyUI？",
+        "answer": "GPU支持ComfyUI，镜像仓库提供相关镜像，也可上传自定义镜像。"
     },
     {
-        "category": "Support",
-        "question": "API is slow - what can I do?",
-        "answer": "If responses are slow:\n1. Use a faster/smaller model\n2. Reduce max_tokens\n3. Shorten input length\n4. Use streaming (stream=true)\n5. Check network connectivity\n\nReport persistent issues on Discord."
+        "category": "其他",
+        "question": "如何托管OpenClaw？",
+        "answer": "Novita已上线ClawDBot模板，可直接在Sandbox中启动。"
+    },
+    {
+        "category": "其他",
+        "question": "企业级需求（如H100集群）如何对接？",
+        "answer": "提供公司名称、业务场景、需求量、联系方式，客户经理将直接对接。"
+    },
+    {
+        "category": "其他",
+        "question": "如何申请模型白名单？",
+        "answer": "联系客服提供账户信息和所需模型名称。"
+    },
+    {
+        "category": "其他",
+        "question": "API返回\"server overload\"怎么办？",
+        "answer": "通常是临时资源压力，建议稍后重试或联系客服确认。"
     },
 ]
 
