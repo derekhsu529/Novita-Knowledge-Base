@@ -1,7 +1,7 @@
 """统计 API 路由"""
 
 from typing import List
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from ..models import StatsOverview, DailyStat, HotQuestion
 from ..database import get_stats_overview, get_daily_stats, get_hot_questions
 
@@ -16,14 +16,14 @@ async def stats_overview():
 
 
 @router.get("/daily", response_model=List[DailyStat])
-async def stats_daily(days: int = 7):
+async def stats_daily(days: int = Query(7, ge=1, le=90)):
     """获取每日统计"""
     stats = await get_daily_stats(days=days)
     return [DailyStat(**s) for s in stats]
 
 
 @router.get("/hot_questions", response_model=List[HotQuestion])
-async def hot_questions(limit: int = 10):
+async def hot_questions(limit: int = Query(10, ge=1, le=100)):
     """获取热门问题"""
     questions = await get_hot_questions(limit=limit)
     return [HotQuestion(**q) for q in questions]

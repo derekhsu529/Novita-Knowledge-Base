@@ -132,11 +132,13 @@ def generate_answer(question: str, context: str, image_base64: str = None) -> st
         "text": f"Knowledge base content:\n{context}\n\nUser question: {question}\n\n[REMINDER: You MUST respond entirely in English. Do not use any Chinese characters.]"
     })
 
-    response = client.messages.create(
-        model=AI_MODEL,
-        max_tokens=2000,
-        system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": content}]
-    )
-
-    return response.content[0].text
+    try:
+        response = client.messages.create(
+            model=AI_MODEL,
+            max_tokens=2000,
+            system=SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": content}]
+        )
+        return response.content[0].text
+    except Exception as e:
+        raise RuntimeError(f"AI 服务暂时不可用: {e}")

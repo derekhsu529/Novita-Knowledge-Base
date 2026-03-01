@@ -2,7 +2,7 @@
 
 import time
 from typing import List
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from ..models import AskRequest, AskResponse, FeedbackRequest, FeedbackResponse, QARecord, MatchedDoc
 from ..database import save_qa_record, save_feedback, get_qa_history, delete_qa_record
 from ..knowledge import search_knowledge_base, generate_answer
@@ -59,7 +59,7 @@ async def ask_question(request: AskRequest):
 
 
 @router.get("/history", response_model=List[QARecord])
-async def get_history(limit: int = 20, offset: int = 0):
+async def get_history(limit: int = Query(20, ge=1, le=100), offset: int = Query(0, ge=0)):
     """获取问答历史"""
     records = await get_qa_history(limit=limit, offset=offset)
     return [QARecord(**record) for record in records]

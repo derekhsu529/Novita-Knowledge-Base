@@ -11,6 +11,7 @@
             document.write('<script src="https://unpkg.com/marked/marked.min.js"><\/script>');
         }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
     <script>
         if (typeof marked === 'undefined') {
             window.marked = { parse: function(text) { return text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); } };
@@ -265,7 +266,7 @@
             } else {
                 textarea.classList.add('hidden');
                 preview.classList.remove('hidden');
-                preview.innerHTML = marked.parse(textarea.value || '*无内容*');
+                preview.innerHTML = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(marked.parse(textarea.value || '*无内容*')) : marked.parse(textarea.value || '*无内容*');
                 tabEdit.className = 'px-3 py-1 text-sm rounded bg-gray-100 text-gray-600 hover:bg-gray-200';
                 tabPreview.className = 'px-3 py-1 text-sm rounded bg-indigo-100 text-indigo-700 font-medium';
             }
