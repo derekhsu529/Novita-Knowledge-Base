@@ -1,0 +1,66 @@
+{
+  "source": "novita-skills",
+  "repo": "https://github.com/novitalabs/novita-skills",
+  "pages": [
+    {
+      "title": "Quick Start Guide",
+      "path": "references/quick-start.md",
+      "url": "https://novita.ai/docs",
+      "category": "getting-started"
+    },
+    {
+      "title": "LLM API Guide",
+      "path": "references/llm-guide.md",
+      "url": "https://novita.ai/docs/api-reference/model-apis-llm-create-chat-completion",
+      "category": "llm-api"
+    },
+    {
+      "title": "Agent Sandbox Guide",
+      "path": "references/sandbox-guide.md",
+      "url": "https://novita.ai/docs/guides/sandbox-overview",
+      "category": "sandbox"
+    },
+    {
+      "title": "GPU Instances Guide",
+      "path": "references/gpu-guide.md",
+      "url": "https://novita.ai/docs/guides/gpu-instance-overview",
+      "category": "gpu"
+    },
+    {
+      "title": "Common Issues & FAQ",
+      "path": "references/common-issues.md",
+      "url": "https://novita.ai/docs/guides/faq",
+      "category": "troubleshooting"
+    },
+    {
+      "title": "Integrations Overview",
+      "path": "references/integrations.md",
+      "url": "https://novita.ai/docs",
+      "category": "integrations"
+    },
+    {
+      "title": "Client Integrations (Cursor, Continue, etc.)",
+      "path": "references/integrations-clients.md",
+      "url": "https://novita.ai/docs",
+      "category": "integrations"
+    },
+    {
+      "title": "Framework Integrations (LangChain, LlamaIndex)",
+      "path": "references/integrations-frameworks.md",
+      "url": "https://novita.ai/docs",
+      "category": "integrations"
+    },
+    {
+      "title": "Observability & Agent Integrations",
+      "path": "references/integrations-observability-agents.md",
+      "url": "https://novita.ai/docs",
+      "category": "integrations"
+    },
+    {
+      "title": "Novita AI Platform Reference (SKILL)",
+      "path": "SKILL.md",
+      "url": "https://github.com/novitalabs/novita-skills",
+      "category": "overview"
+    }
+  ]
+}

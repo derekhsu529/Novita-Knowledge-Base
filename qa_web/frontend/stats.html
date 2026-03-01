@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - Novita AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <span class="text-xl font-bold text-indigo-600">Novita AI</span>
+                <span class="text-gray-500">Analytics</span>
+            </div>
+            <a href="/" target="_blank" class="text-gray-600 hover:text-indigo-600">Back to Q&A</a>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="text-sm text-gray-500">Total Questions</div>
+                <div id="totalQuestions" class="text-3xl font-bold text-indigo-600">-</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="text-sm text-gray-500">Total Feedback</div>
+                <div id="totalFeedback" class="text-3xl font-bold text-purple-600">-</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="text-sm text-gray-500">Helpful Rate</div>
+                <div id="helpfulRate" class="text-3xl font-bold text-green-600">-</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="text-sm text-gray-500">Avg Response Time</div>
+                <div id="avgResponseTime" class="text-3xl font-bold text-orange-600">-</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-medium text-gray-700 mb-4">Last 7 Days Trend</h3>
+                <canvas id="trendChart" height="200"></canvas>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-medium text-gray-700 mb-4">Feedback Distribution</h3>
+                <canvas id="feedbackChart" height="200"></canvas>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <h3 class="text-lg font-medium text-gray-700 mb-4">Top 10 Questions</h3>
+            <div id="hotQuestions" class="space-y-3"></div>
+            <div id="noHotQuestions" class="hidden text-center text-gray-400 py-8">No data</div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-700">History</h3>
+                <div class="flex items-center space-x-4 text-sm">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-gray-500">Per page</span>
+                        <select id="pageSize" onchange="changePageSize()" class="border border-gray-300 rounded px-2 py-1 text-gray-700">
+                            <option value="10" selected>10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+                    <span id="historyTotalCount" class="text-gray-500">Total: -</span>
+                </div>
+            </div>
+
+            <div id="historyList" class="divide-y divide-gray-100"></div>
+
+            <div id="pagination" class="hidden flex justify-center items-center space-x-4 mt-4 pt-4 border-t text-sm">
+                <button onclick="prevPage()" id="prevBtn" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    &lt; Previous
+                </button>
+                <span class="text-gray-600">Page <span id="currentPage">1</span> / <span id="totalPages">1</span></span>
+                <button onclick="nextPage()" id="nextBtn" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    Next &gt;
+                </button>
+            </div>
+
+            <div id="noHistory" class="hidden text-center text-gray-400 py-8">No history</div>
+        </div>
+    </main>
+
+    <script>
+        let trendChart = null;
+        let feedbackChart = null;
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function loadOverview() {
+            try {
+                const response = await fetch('/api/stats/overview');
+                const data = await response.json();
+                document.getElementById('totalQuestions').textContent = data.total_questions;
+                document.getElementById('totalFeedback').textContent = data.total_feedback;
+                totalRecords = data.total_questions;
+                document.getElementById('helpfulRate').textContent = data.helpful_rate + '%';
+                document.getElementById('avgResponseTime').textContent = (data.avg_response_time_ms / 1000).toFixed(1) + 's';
+                updateFeedbackChart(data.helpful_count, data.not_helpful_count);
+            } catch (error) { console.error('Load overview failed:', error); }
+        }
+
+        async function loadDailyStats() {
+            try {
+                const response = await fetch('/api/stats/daily?days=7');
+                const data = await response.json();
+                updateTrendChart(data.reverse());
+            } catch (error) { console.error('Load trend failed:', error); }
+        }
+
+        async function loadHotQuestions() {
+            try {
+                const response = await fetch('/api/stats/hot_questions?limit=10');
+                const data = await response.json();
+                const container = document.getElementById('hotQuestions');
+                const noData = document.getElementById('noHotQuestions');
+                if (data.length === 0) { container.classList.add('hidden'); noData.classList.remove('hidden'); return; }
+                container.innerHTML = data.map((q, i) => `
+                    <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-lg font-bold text-gray-400">${i + 1}</span>
+                            <span class="text-gray-700">${escapeHtml(q.question)}</span>
+                        </div>
+                        <span class="text-sm text-gray-500">${q.count}x</span>
+                    </div>
+                `).join('');
+            } catch (error) { console.error('Load hot questions failed:', error); }
+        }
+
+        let currentPage = 1;
+        let pageSize = 10;
+        let totalRecords = 0;
+
+        async function loadHistoryPage() {
+            try {
+                const offset = (currentPage - 1) * pageSize;
+                const response = await fetch(`/api/qa/history?limit=${pageSize}&offset=${offset}`);
+                const data = await response.json();
+                const container = document.getElementById('historyList');
+                const noData = document.getElementById('noHistory');
+                const pagination = document.getElementById('pagination');
+                if (data.length === 0 && currentPage === 1) { container.innerHTML = ''; pagination.classList.add('hidden'); noData.classList.remove('hidden'); return; }
+                noData.classList.add('hidden');
+                pagination.classList.remove('hidden');
+                const startIndex = offset + 1;
+                container.innerHTML = data.map((record, i) => `
+                    <div class="flex items-center py-2 hover:bg-gray-50 text-sm">
+                        <span class="w-10 text-gray-400 text-right mr-3">${startIndex + i}</span>
+                        <span class="flex-1 text-gray-700 truncate" title="${escapeHtml(record.question)}">${escapeHtml(record.question)}</span>
+                        <span class="w-20 text-gray-400 text-right">${formatTime(record.created_at)}</span>
+                        <span class="w-16 text-gray-400 text-right">${((record.response_time_ms || 0) / 1000).toFixed(1)}s</span>
+                        <span class="w-20 text-right ${getFeedbackColor(record.feedback)}">${getFeedbackText(record.feedback)}</span>
+                    </div>
+                `).join('');
+                updatePagination();
+            } catch (error) { console.error('Load history failed:', error); }
+        }
+
+        function formatTime(dateStr) {
+            const date = new Date(dateStr);
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const yesterday = new Date(today.getTime() - 86400000);
+            if (date >= today) return date.toTimeString().slice(0, 5);
+            else if (date >= yesterday) return 'Yesterday';
+            else return (date.getMonth() + 1).toString().padStart(2, '0') + '-' + date.getDate().toString().padStart(2, '0');
+        }
+
+        function getFeedbackColor(feedback) {
+            if (feedback === null) return 'text-gray-400';
+            return feedback ? 'text-green-500' : 'text-orange-500';
+        }
+
+        function getFeedbackText(feedback) {
+            if (feedback === null) return 'N/A';
+            return feedback ? '👍' : '✏️';
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(totalRecords / pageSize) || 1;
+            document.getElementById('currentPage').textContent = currentPage;
+            document.getElementById('totalPages').textContent = totalPages;
+            document.getElementById('historyTotalCount').textContent = `Total: ${totalRecords}`;
+            document.getElementById('prevBtn').disabled = currentPage <= 1;
+            document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+        }
+
+        function prevPage() { if (currentPage > 1) { currentPage--; loadHistoryPage(); } }
+        function nextPage() { const totalPages = Math.ceil(totalRecords / pageSize); if (currentPage < totalPages) { currentPage++; loadHistoryPage(); } }
+        function changePageSize() { pageSize = parseInt(document.getElementById('pageSize').value); currentPage = 1; loadHistoryPage(); }
+
+        function updateTrendChart(data) {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            if (trendChart) trendChart.destroy();
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.date.substring(5)),
+                    datasets: [{
+                        label: 'Questions', data: data.map(d => d.questions),
+                        borderColor: '#6366f1', backgroundColor: 'rgba(99, 102, 241, 0.1)', fill: true, tension: 0.3
+                    }, {
+                        label: 'Helpful', data: data.map(d => d.helpful),
+                        borderColor: '#22c55e', backgroundColor: 'transparent', tension: 0.3
+                    }, {
+                        label: 'Not helpful', data: data.map(d => d.not_helpful),
+                        borderColor: '#ef4444', backgroundColor: 'transparent', tension: 0.3
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        function updateFeedbackChart(helpful, notHelpful) {
+            const ctx = document.getElementById('feedbackChart').getContext('2d');
+            if (feedbackChart) feedbackChart.destroy();
+            feedbackChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Helpful', 'Not helpful'],
+                    datasets: [{ data: [helpful, notHelpful], backgroundColor: ['#22c55e', '#ef4444'] }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+
+        loadOverview().then(() => loadHistoryPage());
+        loadDailyStats();
+        loadHotQuestions();
+    </script>
+</body>
+</html>
