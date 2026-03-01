@@ -435,9 +435,13 @@
                     <div class="bg-white rounded-lg shadow p-4 hover:shadow-md transition">
                         <div class="flex items-start">
                             <span class="text-2xl font-bold text-indigo-200 mr-4">${historyTotal - offset - index}</span>
-                            <div class="flex-1 cursor-pointer" onclick="showHistoryAnswer('${encodeURIComponent(record.question)}', '${encodeURIComponent(record.answer)}')">
+                            <div class="flex-1 cursor-pointer" onclick="toggleHistoryAnswer(${record.id})">
                                 <p class="text-gray-800 font-medium">${escapeHtml(record.question)}</p>
-                                <p class="text-gray-500 text-sm mt-1 line-clamp-2">${escapeHtml(record.answer.slice(0, 100))}${record.answer.length > 100 ? '...' : ''}</p>
+                                <p id="hist-preview-${record.id}" class="text-gray-500 text-sm mt-1 line-clamp-2">${escapeHtml(record.answer.slice(0, 100))}${record.answer.length > 100 ? '...' : ''}</p>
+                                <div id="hist-expand-${record.id}" class="hidden mt-2">
+                                    <div class="markdown-body text-xs text-gray-600 leading-relaxed line-clamp-[6]" id="hist-content-${record.id}"></div>
+                                    <button onclick="event.stopPropagation(); expandFullAnswer(${record.id})" id="hist-more-${record.id}" class="text-indigo-500 text-xs mt-1 hover:underline">展开全部</button>
+                                </div>
                             </div>
                             <div class="flex items-center space-x-2 ml-4">
                                 <button onclick="event.stopPropagation(); openEditFeedback(${record.id}, ${record.feedback}, '${record.feedback_text ? encodeURIComponent(record.feedback_text) : ''}')"
@@ -468,6 +472,10 @@
                     </div>
                 `).join('');
 
+                // 存储回答数据供展开使用
+                window._historyAnswers = {};
+                data.forEach(r => { window._historyAnswers[r.id] = r.answer; });
+
             } catch (error) {
                 console.error('加载历史记录失败:', error);
             }
@@ -496,15 +504,40 @@
             loadHistoryPage();
         }
 
-        // 显示历史回答
-        function showHistoryAnswer(question, answer) {
-            document.getElementById('questionInput').value = decodeURIComponent(question);
-            document.getElementById('answerSection').classList.remove('hidden');
-            document.getElementById('loading').classList.add('hidden');
-            document.getElementById('answerContent').classList.remove('hidden');
-            document.getElementById('feedbackSection').classList.add('hidden');
-            document.getElementById('answerText').innerHTML = marked.parse(decodeURIComponent(answer));
-            document.getElementById('matchedDocs').classList.add('hidden');
+        // 切换历史回答展开/收起
+        function toggleHistoryAnswer(id) {
+            const preview = document.getElementById(`hist-preview-${id}`);
+            const expand = document.getElementById(`hist-expand-${id}`);
+            const content = document.getElementById(`hist-content-${id}`);
+            const moreBtn = document.getElementById(`hist-more-${id}`);
+
+            if (expand.classList.contains('hidden')) {
+                // 展开：渲染 markdown，限制6行
+                const answer = window._historyAnswers[id] || '';
+                content.innerHTML = marked.parse(answer);
+                content.classList.add('line-clamp-[6]');
+                moreBtn.classList.remove('hidden');
+                moreBtn.textContent = '展开全部';
+                preview.classList.add('hidden');
+                expand.classList.remove('hidden');
+            } else {
+                // 收起
+                preview.classList.remove('hidden');
+                expand.classList.add('hidden');
+            }
+        }
+
+        // 展开全部回答
+        function expandFullAnswer(id) {
+            const content = document.getElementById(`hist-content-${id}`);
+            const moreBtn = document.getElementById(`hist-more-${id}`);
+            if (content.classList.contains('line-clamp-[6]')) {
+                content.classList.remove('line-clamp-[6]');
+                moreBtn.textContent = '收起';
+            } else {
+                content.classList.add('line-clamp-[6]');
+                moreBtn.textContent = '展开全部';
+            }
         }
 
         // 打开编辑评价弹窗
