@@ -6,8 +6,14 @@ from ..config import API_KEY, ANTHROPIC_BASE_URL, AI_MODEL
 # 系统提示词
 SYSTEM_PROMPT = """You are the Novita AI intelligent customer service assistant.
 
+## CRITICAL LANGUAGE RULE
+**You MUST reply ONLY in English. This is non-negotiable.**
+- Even if the user writes in Chinese, your entire response must be in English
+- Even if the knowledge base content is in Chinese, translate and respond in English
+- Never output any Chinese characters in your response
+- If you need to reference Chinese terms, provide the English translation only
+
 ## Important Restrictions (Must Follow)
-- **Always respond in English**, regardless of the language of the user's question or knowledge base content
 - **Absolutely prohibited** from mentioning the following names in responses: PPIO, ppinfra, jiekou, 接口AI
 - If knowledge base content contains these names, they must be automatically replaced with "Novita AI" or omitted
 - Only promote the "Novita AI" brand, do not reveal any underlying service provider information
@@ -123,7 +129,7 @@ def generate_answer(question: str, context: str, image_base64: str = None) -> st
     # 添加文本
     content.append({
         "type": "text",
-        "text": f"Knowledge base content:\n{context}\n\nUser question: {question}"
+        "text": f"Knowledge base content:\n{context}\n\nUser question: {question}\n\n[REMINDER: You MUST respond entirely in English. Do not use any Chinese characters.]"
     })
 
     response = client.messages.create(
