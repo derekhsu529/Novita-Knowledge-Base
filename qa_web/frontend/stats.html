@@ -1,89 +1,106 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analytics - Novita AI</title>
+    <title>问答统计 - Novita AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gray-50 min-h-screen">
+    <!-- 导航栏 -->
     <nav class="bg-white shadow-sm">
         <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center space-x-2">
                 <span class="text-xl font-bold text-indigo-600">Novita AI</span>
-                <span class="text-gray-500">Analytics</span>
+                <span class="text-gray-500">问答统计</span>
             </div>
-            <a href="/" target="_blank" class="text-gray-600 hover:text-indigo-600">Back to Q&A</a>
+            <a href="/" target="_blank" class="text-gray-600 hover:text-indigo-600">返回问答</a>
         </div>
     </nav>
 
+    <!-- 主内容 -->
     <main class="max-w-6xl mx-auto px-4 py-8">
+        <!-- 概览卡片 -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
             <div class="bg-white rounded-lg shadow p-6">
-                <div class="text-sm text-gray-500">Total Questions</div>
+                <div class="text-sm text-gray-500">总问题数</div>
                 <div id="totalQuestions" class="text-3xl font-bold text-indigo-600">-</div>
             </div>
             <div class="bg-white rounded-lg shadow p-6">
-                <div class="text-sm text-gray-500">Total Feedback</div>
+                <div class="text-sm text-gray-500">收到评价</div>
                 <div id="totalFeedback" class="text-3xl font-bold text-purple-600">-</div>
             </div>
             <div class="bg-white rounded-lg shadow p-6">
-                <div class="text-sm text-gray-500">Helpful Rate</div>
+                <div class="text-sm text-gray-500">有用率</div>
                 <div id="helpfulRate" class="text-3xl font-bold text-green-600">-</div>
             </div>
             <div class="bg-white rounded-lg shadow p-6">
-                <div class="text-sm text-gray-500">Avg Response Time</div>
+                <div class="text-sm text-gray-500">平均响应时间</div>
                 <div id="avgResponseTime" class="text-3xl font-bold text-orange-600">-</div>
             </div>
         </div>
 
+        <!-- 图表区域 -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- 趋势图 -->
             <div class="bg-white rounded-lg shadow p-6">
-                <h3 class="text-lg font-medium text-gray-700 mb-4">Last 7 Days Trend</h3>
+                <h3 class="text-lg font-medium text-gray-700 mb-4">最近 7 天趋势</h3>
                 <canvas id="trendChart" height="200"></canvas>
             </div>
+
+            <!-- 评价分布 -->
             <div class="bg-white rounded-lg shadow p-6">
-                <h3 class="text-lg font-medium text-gray-700 mb-4">Feedback Distribution</h3>
+                <h3 class="text-lg font-medium text-gray-700 mb-4">评价分布</h3>
                 <canvas id="feedbackChart" height="200"></canvas>
             </div>
         </div>
 
+        <!-- 热门问题 -->
         <div class="bg-white rounded-lg shadow p-6 mb-8">
-            <h3 class="text-lg font-medium text-gray-700 mb-4">Top 10 Questions</h3>
+            <h3 class="text-lg font-medium text-gray-700 mb-4">热门问题 TOP 10</h3>
             <div id="hotQuestions" class="space-y-3"></div>
-            <div id="noHotQuestions" class="hidden text-center text-gray-400 py-8">No data</div>
+            <div id="noHotQuestions" class="hidden text-center text-gray-400 py-8">
+                暂无数据
+            </div>
         </div>
 
+        <!-- 历史问题 -->
         <div class="bg-white rounded-lg shadow p-6">
+            <!-- 标题栏 -->
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-medium text-gray-700">History</h3>
+                <h3 class="text-lg font-medium text-gray-700">历史问题</h3>
                 <div class="flex items-center space-x-4 text-sm">
                     <div class="flex items-center space-x-2">
-                        <span class="text-gray-500">Per page</span>
+                        <span class="text-gray-500">每页</span>
                         <select id="pageSize" onchange="changePageSize()" class="border border-gray-300 rounded px-2 py-1 text-gray-700">
                             <option value="10" selected>10</option>
                             <option value="20">20</option>
                             <option value="50">50</option>
                         </select>
+                        <span class="text-gray-500">条</span>
                     </div>
-                    <span id="historyTotalCount" class="text-gray-500">Total: -</span>
+                    <span id="historyTotalCount" class="text-gray-500">共 - 条</span>
                 </div>
             </div>
 
+            <!-- 列表 -->
             <div id="historyList" class="divide-y divide-gray-100"></div>
 
+            <!-- 分页控件 -->
             <div id="pagination" class="hidden flex justify-center items-center space-x-4 mt-4 pt-4 border-t text-sm">
                 <button onclick="prevPage()" id="prevBtn" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded transition disabled:opacity-50 disabled:cursor-not-allowed">
-                    &lt; Previous
+                    &lt; 上一页
                 </button>
-                <span class="text-gray-600">Page <span id="currentPage">1</span> / <span id="totalPages">1</span></span>
+                <span class="text-gray-600">第 <span id="currentPage">1</span> 页 / 共 <span id="totalPages">1</span> 页</span>
                 <button onclick="nextPage()" id="nextBtn" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded transition disabled:opacity-50 disabled:cursor-not-allowed">
-                    Next &gt;
+                    下一页 &gt;
                 </button>
             </div>
 
-            <div id="noHistory" class="hidden text-center text-gray-400 py-8">No history</div>
+            <div id="noHistory" class="hidden text-center text-gray-400 py-8">
+                暂无历史记录
+            </div>
         </div>
     </main>
 
@@ -91,68 +108,105 @@
         let trendChart = null;
         let feedbackChart = null;
 
+        // HTML 转义函数，防止 XSS
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
 
+        // 加载概览数据
         async function loadOverview() {
             try {
                 const response = await fetch('/api/stats/overview');
                 const data = await response.json();
+
                 document.getElementById('totalQuestions').textContent = data.total_questions;
                 document.getElementById('totalFeedback').textContent = data.total_feedback;
-                totalRecords = data.total_questions;
+                totalRecords = data.total_questions;  // 用于历史问题分页
                 document.getElementById('helpfulRate').textContent = data.helpful_rate + '%';
                 document.getElementById('avgResponseTime').textContent = (data.avg_response_time_ms / 1000).toFixed(1) + 's';
+
+                // 更新评价分布图
                 updateFeedbackChart(data.helpful_count, data.not_helpful_count);
-            } catch (error) { console.error('Load overview failed:', error); }
+
+            } catch (error) {
+                console.error('加载概览失败:', error);
+            }
         }
 
+        // 加载趋势数据
         async function loadDailyStats() {
             try {
                 const response = await fetch('/api/stats/daily?days=7');
                 const data = await response.json();
+
                 updateTrendChart(data.reverse());
-            } catch (error) { console.error('Load trend failed:', error); }
+
+            } catch (error) {
+                console.error('加载趋势失败:', error);
+            }
         }
 
+        // 加载热门问题
         async function loadHotQuestions() {
             try {
                 const response = await fetch('/api/stats/hot_questions?limit=10');
                 const data = await response.json();
+
                 const container = document.getElementById('hotQuestions');
                 const noData = document.getElementById('noHotQuestions');
-                if (data.length === 0) { container.classList.add('hidden'); noData.classList.remove('hidden'); return; }
+
+                if (data.length === 0) {
+                    container.classList.add('hidden');
+                    noData.classList.remove('hidden');
+                    return;
+                }
+
                 container.innerHTML = data.map((q, i) => `
                     <div class="flex items-center justify-between py-2 border-b border-gray-100">
                         <div class="flex items-center space-x-3">
                             <span class="text-lg font-bold text-gray-400">${i + 1}</span>
                             <span class="text-gray-700">${escapeHtml(q.question)}</span>
                         </div>
-                        <span class="text-sm text-gray-500">${q.count}x</span>
+                        <span class="text-sm text-gray-500">${q.count} 次</span>
                     </div>
                 `).join('');
-            } catch (error) { console.error('Load hot questions failed:', error); }
+
+            } catch (error) {
+                console.error('加载热门问题失败:', error);
+            }
         }
 
+        // 历史问题分页
         let currentPage = 1;
         let pageSize = 10;
         let totalRecords = 0;
 
+        // 加载历史问题
         async function loadHistoryPage() {
             try {
                 const offset = (currentPage - 1) * pageSize;
                 const response = await fetch(`/api/qa/history?limit=${pageSize}&offset=${offset}`);
                 const data = await response.json();
+
                 const container = document.getElementById('historyList');
                 const noData = document.getElementById('noHistory');
                 const pagination = document.getElementById('pagination');
-                if (data.length === 0 && currentPage === 1) { container.innerHTML = ''; pagination.classList.add('hidden'); noData.classList.remove('hidden'); return; }
+
+                if (data.length === 0 && currentPage === 1) {
+                    container.innerHTML = '';
+                    pagination.classList.add('hidden');
+                    noData.classList.remove('hidden');
+                    return;
+                }
+
                 noData.classList.add('hidden');
                 pagination.classList.remove('hidden');
+
+                // 计算序号起始值（倒序显示）
                 const startIndex = offset + 1;
+
                 container.innerHTML = data.map((record, i) => `
                     <div class="flex items-center py-2 hover:bg-gray-50 text-sm">
                         <span class="w-10 text-gray-400 text-right mr-3">${startIndex + i}</span>
@@ -162,79 +216,137 @@
                         <span class="w-20 text-right ${getFeedbackColor(record.feedback)}">${getFeedbackText(record.feedback)}</span>
                     </div>
                 `).join('');
+
                 updatePagination();
-            } catch (error) { console.error('Load history failed:', error); }
+
+            } catch (error) {
+                console.error('加载历史记录失败:', error);
+            }
         }
 
+        // 格式化时间显示
         function formatTime(dateStr) {
             const date = new Date(dateStr);
             const now = new Date();
             const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
             const yesterday = new Date(today.getTime() - 86400000);
-            if (date >= today) return date.toTimeString().slice(0, 5);
-            else if (date >= yesterday) return 'Yesterday';
-            else return (date.getMonth() + 1).toString().padStart(2, '0') + '-' + date.getDate().toString().padStart(2, '0');
+
+            if (date >= today) {
+                return date.toTimeString().slice(0, 5);
+            } else if (date >= yesterday) {
+                return '昨天';
+            } else {
+                return (date.getMonth() + 1).toString().padStart(2, '0') + '-' + date.getDate().toString().padStart(2, '0');
+            }
         }
 
+        // 获取评价颜色
         function getFeedbackColor(feedback) {
             if (feedback === null) return 'text-gray-400';
             return feedback ? 'text-green-500' : 'text-orange-500';
         }
 
+        // 获取评价文本
         function getFeedbackText(feedback) {
-            if (feedback === null) return 'N/A';
-            return feedback ? '👍' : '✏️';
+            if (feedback === null) return '未评价';
+            return feedback ? '👍 有用' : '✏️ 需改进';
         }
 
+        // 更新分页状态
         function updatePagination() {
             const totalPages = Math.ceil(totalRecords / pageSize) || 1;
             document.getElementById('currentPage').textContent = currentPage;
             document.getElementById('totalPages').textContent = totalPages;
-            document.getElementById('historyTotalCount').textContent = `Total: ${totalRecords}`;
+            document.getElementById('historyTotalCount').textContent = `共 ${totalRecords} 条`;
+
             document.getElementById('prevBtn').disabled = currentPage <= 1;
             document.getElementById('nextBtn').disabled = currentPage >= totalPages;
         }
 
-        function prevPage() { if (currentPage > 1) { currentPage--; loadHistoryPage(); } }
-        function nextPage() { const totalPages = Math.ceil(totalRecords / pageSize); if (currentPage < totalPages) { currentPage++; loadHistoryPage(); } }
-        function changePageSize() { pageSize = parseInt(document.getElementById('pageSize').value); currentPage = 1; loadHistoryPage(); }
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                loadHistoryPage();
+            }
+        }
 
+        function nextPage() {
+            const totalPages = Math.ceil(totalRecords / pageSize);
+            if (currentPage < totalPages) {
+                currentPage++;
+                loadHistoryPage();
+            }
+        }
+
+        function changePageSize() {
+            pageSize = parseInt(document.getElementById('pageSize').value);
+            currentPage = 1;
+            loadHistoryPage();
+        }
+
+        // 更新趋势图
         function updateTrendChart(data) {
             const ctx = document.getElementById('trendChart').getContext('2d');
+
             if (trendChart) trendChart.destroy();
+
             trendChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: data.map(d => d.date.substring(5)),
                     datasets: [{
-                        label: 'Questions', data: data.map(d => d.questions),
-                        borderColor: '#6366f1', backgroundColor: 'rgba(99, 102, 241, 0.1)', fill: true, tension: 0.3
+                        label: '问题数',
+                        data: data.map(d => d.questions),
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.3
                     }, {
-                        label: 'Helpful', data: data.map(d => d.helpful),
-                        borderColor: '#22c55e', backgroundColor: 'transparent', tension: 0.3
+                        label: '有用',
+                        data: data.map(d => d.helpful),
+                        borderColor: '#22c55e',
+                        backgroundColor: 'transparent',
+                        tension: 0.3
                     }, {
-                        label: 'Not helpful', data: data.map(d => d.not_helpful),
-                        borderColor: '#ef4444', backgroundColor: 'transparent', tension: 0.3
+                        label: '没用',
+                        data: data.map(d => d.not_helpful),
+                        borderColor: '#ef4444',
+                        backgroundColor: 'transparent',
+                        tension: 0.3
                     }]
                 },
-                options: { responsive: true, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true } } }
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: { y: { beginAtZero: true } }
+                }
             });
         }
 
+        // 更新评价分布图
         function updateFeedbackChart(helpful, notHelpful) {
             const ctx = document.getElementById('feedbackChart').getContext('2d');
+
             if (feedbackChart) feedbackChart.destroy();
+
             feedbackChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Helpful', 'Not helpful'],
-                    datasets: [{ data: [helpful, notHelpful], backgroundColor: ['#22c55e', '#ef4444'] }]
+                    labels: ['有用', '没用'],
+                    datasets: [{
+                        data: [helpful, notHelpful],
+                        backgroundColor: ['#22c55e', '#ef4444']
+                    }]
                 },
-                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom' } }
+                }
             });
         }
 
-        loadOverview().then(() => loadHistoryPage());
+        // 页面加载
+        loadOverview().then(() => loadHistoryPage());  // 先加载概览获取总数，再加载历史
         loadDailyStats();
         loadHotQuestions();
     </script>

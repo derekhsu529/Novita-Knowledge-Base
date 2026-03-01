@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Novita AI Smart Support</title>
+    <title>Novita AI 智能客服</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Markdown 渲染库 - 多 CDN 备用 -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         if (typeof marked === 'undefined') {
@@ -12,6 +13,7 @@
         }
     </script>
     <script>
+        // 最终降级：如果所有 CDN 都失败，使用纯文本显示
         if (typeof marked === 'undefined') {
             window.marked = { parse: function(text) { return text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); } };
         }
@@ -41,12 +43,12 @@
             <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
                 <div class="flex items-center space-x-2">
                     <span class="text-xl font-bold text-indigo-600">Novita AI</span>
-                    <span class="text-gray-500">Smart Support</span>
-                    <span class="bg-orange-100 text-orange-600 text-xs px-2 py-0.5 rounded-full">Beta</span>
+                    <span class="text-gray-500">智能客服</span>
+                    <span class="bg-orange-100 text-orange-600 text-xs px-2 py-0.5 rounded-full">Beta测试</span>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <a href="/manual-kb" target="_blank" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">Knowledge Base</a>
-                    <a href="/stats" target="_blank" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition">Analytics</a>
+                    <a href="/manual-kb" target="_blank" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">手工知识库</a>
+                    <a href="/stats" target="_blank" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition">统计分析</a>
                 </div>
             </div>
         </nav>
@@ -57,9 +59,9 @@
             <div class="mb-3">
                 <h2 class="text-lg font-semibold text-gray-800 flex items-center">
                     <span class="text-2xl mr-2">💬</span>
-                    Have a question? Ask here
+                    有问题？请在这里提问
                 </h2>
-                <p class="text-sm text-gray-500 mt-1">Supports text and images - paste a screenshot or click to upload</p>
+                <p class="text-sm text-gray-500 mt-1">支持文字和图片，可以直接粘贴截图或点击上传</p>
             </div>
 
             <!-- 图片预览区 -->
@@ -74,10 +76,10 @@
                         type="text"
                         id="questionInput"
                         class="flex-1 px-4 py-3 rounded-l-lg focus:outline-none text-lg"
-                        placeholder="Type your question or paste a screenshot..."
+                        placeholder="输入问题或粘贴截图..."
                         onkeypress="if(event.key === 'Enter') askQuestion()"
                     >
-                    <label class="px-4 py-3 cursor-pointer hover:bg-gray-100 border-l border-gray-200 transition" title="Upload image">
+                    <label class="px-4 py-3 cursor-pointer hover:bg-gray-100 border-l border-gray-200 transition" title="上传图片">
                         <span class="text-xl">📷</span>
                         <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="handleImageSelect(event)" />
                     </label>
@@ -87,34 +89,34 @@
                     id="askBtn"
                     class="bg-indigo-600 text-white px-8 py-3 rounded-lg hover:bg-indigo-700 transition disabled:opacity-50 font-medium text-lg"
                 >
-                    Ask
+                    提问
                 </button>
             </div>
             </div>
         </div>
 
-        <!-- 评价横幅 -->
+        <!-- 评价横幅 - 固定在头部下方 -->
         <div id="feedbackSection" class="hidden max-w-4xl mx-auto px-4">
             <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 py-2 px-4 rounded-b-lg shadow-md">
                 <div class="flex items-center justify-between">
-                    <span class="text-white font-medium text-sm">Was this answer helpful?</span>
+                    <span class="text-white font-medium text-sm">这个回答对您有帮助吗？</span>
                     <div class="space-x-2">
                         <button
                             onclick="submitFeedback(true)"
                             class="px-4 py-1.5 bg-white text-green-600 rounded-lg hover:bg-green-50 transition font-medium text-sm shadow-sm"
                         >
-                            👍 Helpful
+                            👍 有用
                         </button>
                         <button
                             onclick="submitFeedback(false)"
                             class="px-4 py-1.5 bg-white text-orange-600 rounded-lg hover:bg-orange-50 transition font-medium text-sm shadow-sm"
                         >
-                            ✏️ Needs improvement
+                            ✏️ 需改进
                         </button>
                     </div>
                 </div>
                 <div id="feedbackThanks" class="hidden text-center py-1 text-white font-medium text-sm">
-                    Thanks for your feedback!
+                    感谢您的反馈！
                 </div>
             </div>
         </div>
@@ -125,21 +127,25 @@
         <!-- 回答区域 -->
         <div id="answerSection" class="hidden">
             <div class="bg-white rounded-lg shadow overflow-hidden">
+                <!-- 加载状态 -->
                 <div id="loading" class="hidden text-center py-8">
                     <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-indigo-600 border-t-transparent"></div>
-                    <p class="mt-2 text-gray-500">Thinking...</p>
+                    <p class="mt-2 text-gray-500">正在思考中...</p>
                 </div>
 
+                <!-- 回答内容 -->
                 <div id="answerContent" class="hidden p-6">
                     <div id="answerText" class="markdown-body text-gray-700"></div>
 
+                    <!-- 参考文档 -->
                     <div id="matchedDocs" class="mt-6 pt-4 border-t border-gray-200">
-                        <h4 class="text-sm font-medium text-gray-500 mb-2">References:</h4>
+                        <h4 class="text-sm font-medium text-gray-500 mb-2">参考文档：</h4>
                         <ul id="docsList" class="text-sm space-y-1"></ul>
                     </div>
 
+                    <!-- 响应时间 -->
                     <div class="mt-4 text-sm text-gray-400">
-                        Response time: <span id="responseTime"></span>ms
+                        响应时间：<span id="responseTime"></span>ms
                     </div>
                 </div>
             </div>
@@ -147,7 +153,7 @@
 
         <!-- 历史记录 -->
         <div class="mt-8">
-            <h3 class="text-lg font-medium text-gray-700 mb-4">Recent Q&A</h3>
+            <h3 class="text-lg font-medium text-gray-700 mb-4">最近问答</h3>
             <div id="historyList" class="space-y-3"></div>
         </div>
     </main>
@@ -155,12 +161,12 @@
     <!-- 需改进原因弹窗 -->
     <div id="feedbackModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white rounded-lg p-6 w-96">
-            <h3 class="text-lg font-medium mb-4">What needs improvement?</h3>
+            <h3 class="text-lg font-medium mb-4">请告诉我们哪里需要改进</h3>
             <textarea id="feedbackReason" class="w-full border border-gray-300 rounded-lg p-3 h-24 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="Describe what could be improved..."></textarea>
+                      placeholder="请描述回答中需要改进的地方..."></textarea>
             <div class="flex justify-end space-x-3 mt-4">
-                <button onclick="closeFeedbackModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">Cancel</button>
-                <button onclick="confirmNegativeFeedback()" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition">Submit</button>
+                <button onclick="closeFeedbackModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">取消</button>
+                <button onclick="confirmNegativeFeedback()" class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition">提交反馈</button>
             </div>
         </div>
     </div>
@@ -168,23 +174,23 @@
     <!-- 编辑评价弹窗 -->
     <div id="editFeedbackModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white rounded-lg p-6 w-96">
-            <h3 class="text-lg font-medium mb-4">Edit Feedback</h3>
+            <h3 class="text-lg font-medium mb-4">修改评价</h3>
             <input type="hidden" id="editQaId" />
             <div class="space-y-3 mb-4">
                 <label class="flex items-center space-x-3 cursor-pointer">
                     <input type="radio" name="editFeedback" value="true" class="w-4 h-4 text-green-600" />
-                    <span class="text-gray-700">👍 Helpful</span>
+                    <span class="text-gray-700">👍 有用</span>
                 </label>
                 <label class="flex items-center space-x-3 cursor-pointer">
                     <input type="radio" name="editFeedback" value="false" class="w-4 h-4 text-orange-600" />
-                    <span class="text-gray-700">✏️ Needs improvement</span>
+                    <span class="text-gray-700">✏️ 需改进</span>
                 </label>
             </div>
             <textarea id="editFeedbackReason" class="w-full border border-gray-300 rounded-lg p-3 h-20 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="Additional notes (optional)..."></textarea>
+                      placeholder="补充说明（可选）..."></textarea>
             <div class="flex justify-end space-x-3 mt-4">
-                <button onclick="closeEditFeedbackModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">Cancel</button>
-                <button onclick="saveEditFeedback()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">Save</button>
+                <button onclick="closeEditFeedbackModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">取消</button>
+                <button onclick="saveEditFeedback()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">保存</button>
             </div>
         </div>
     </div>
@@ -192,29 +198,32 @@
     <!-- 删除确认弹窗 -->
     <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white rounded-lg p-6 w-96">
-            <h3 class="text-lg font-medium mb-4">Confirm Delete</h3>
+            <h3 class="text-lg font-medium mb-4">确认删除</h3>
             <input type="hidden" id="deleteQaId" />
-            <p class="text-gray-600 mb-4">Are you sure you want to delete this record? This action cannot be undone.</p>
+            <p class="text-gray-600 mb-4">确定要删除这条问答记录吗？此操作不可撤销。</p>
             <div class="flex justify-end space-x-3">
-                <button onclick="closeDeleteModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">Cancel</button>
-                <button onclick="confirmDelete()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">Delete</button>
+                <button onclick="closeDeleteModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">取消</button>
+                <button onclick="confirmDelete()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">删除</button>
             </div>
         </div>
     </div>
 
     <script>
         let currentQaId = null;
-        let currentImage = null;
+        let currentImage = null;  // base64 图片数据
 
+        // HTML 转义函数，防止 XSS
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
 
+        // 粘贴图片处理
         document.addEventListener('paste', async (e) => {
             const items = e.clipboardData?.items;
             if (!items) return;
+
             for (const item of items) {
                 if (item.type.startsWith('image/')) {
                     e.preventDefault();
@@ -225,16 +234,20 @@
             }
         });
 
+        // 文件选择处理
         function handleImageSelect(event) {
             const file = event.target.files[0];
             if (file) loadImage(file);
         }
 
+        // 加载图片为 base64
         async function loadImage(file) {
+            // 限制大小 5MB
             if (file.size > 5 * 1024 * 1024) {
-                alert('Image size cannot exceed 5MB');
+                alert('图片大小不能超过 5MB');
                 return;
             }
+
             const reader = new FileReader();
             reader.onload = (e) => {
                 currentImage = e.target.result;
@@ -244,20 +257,23 @@
             reader.readAsDataURL(file);
         }
 
+        // 移除图片
         function removeImage() {
             currentImage = null;
             document.getElementById('imagePreview').classList.add('hidden');
             document.getElementById('imageInput').value = '';
         }
 
+        // 提问
         async function askQuestion() {
             const input = document.getElementById('questionInput');
             const question = input.value.trim();
             if (!question && !currentImage) {
-                alert('Please enter a question or upload an image');
+                alert('请输入问题或上传图片');
                 return;
             }
 
+            // 显示加载状态
             document.getElementById('answerSection').classList.remove('hidden');
             document.getElementById('loading').classList.remove('hidden');
             document.getElementById('answerContent').classList.add('hidden');
@@ -269,47 +285,57 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        question: question || 'Please analyze this image and answer related questions',
+                        question: question || '请分析这张图片并回答相关问题',
                         image: currentImage
                     })
                 });
 
-                if (!response.ok) throw new Error('Request failed');
+                if (!response.ok) throw new Error('请求失败');
 
                 const data = await response.json();
                 currentQaId = data.id;
 
+                // 显示回答
                 document.getElementById('answerText').innerHTML = marked.parse(data.answer);
                 document.getElementById('responseTime').textContent = data.response_time_ms;
 
+                // 显示参考文档
                 const docsList = document.getElementById('docsList');
                 docsList.innerHTML = data.matched_docs.slice(0, 5).map(doc =>
                     `<li><a href="${doc.url}" target="_blank" class="text-indigo-600 hover:underline">${doc.title}</a></li>`
                 ).join('');
 
+                // 显示内容和评价区域
                 document.getElementById('loading').classList.add('hidden');
                 document.getElementById('answerContent').classList.remove('hidden');
                 document.getElementById('feedbackSection').classList.remove('hidden');
                 document.getElementById('feedbackThanks').classList.add('hidden');
 
+                // 刷新历史记录
                 loadHistory();
+
+                // 清除输入和图片
                 input.value = '';
                 removeImage();
 
             } catch (error) {
-                alert('Error: ' + error.message);
+                alert('发生错误：' + error.message);
                 document.getElementById('loading').classList.add('hidden');
             }
 
             document.getElementById('askBtn').disabled = false;
         }
 
+        // 提交评价
         async function submitFeedback(isHelpful) {
             if (!currentQaId) return;
+
             if (!isHelpful) {
+                // 没用时弹出原因对话框
                 document.getElementById('feedbackModal').classList.remove('hidden');
                 return;
             }
+
             await doSubmitFeedback(true, null);
         }
 
@@ -320,7 +346,10 @@
 
         async function confirmNegativeFeedback() {
             const reason = document.getElementById('feedbackReason').value.trim();
-            if (!reason) { alert('Please provide a reason'); return; }
+            if (!reason) {
+                alert('请填写原因');
+                return;
+            }
             await doSubmitFeedback(false, reason);
             closeFeedbackModal();
         }
@@ -332,12 +361,21 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ qa_id: currentQaId, is_helpful: isHelpful, feedback_text: feedbackText })
                 });
+
                 document.getElementById('feedbackThanks').classList.remove('hidden');
-                setTimeout(() => { document.getElementById('feedbackSection').classList.add('hidden'); }, 1500);
+                setTimeout(() => {
+                    document.getElementById('feedbackSection').classList.add('hidden');
+                }, 1500);
+
+                // 刷新历史记录
                 loadHistory();
-            } catch (error) { console.error('Feedback failed:', error); }
+
+            } catch (error) {
+                console.error('提交评价失败:', error);
+            }
         }
 
+        // 加载历史记录
         async function loadHistory() {
             try {
                 const response = await fetch('/api/qa/history?limit=10');
@@ -354,13 +392,13 @@
                             </div>
                             <div class="flex items-center space-x-2 ml-4">
                                 <button onclick="event.stopPropagation(); openEditFeedback(${record.id}, ${record.feedback}, '${record.feedback_text ? encodeURIComponent(record.feedback_text) : ''}')"
-                                        class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition" title="Edit feedback">
+                                        class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition" title="编辑评价">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                     </svg>
                                 </button>
                                 <button onclick="event.stopPropagation(); openDeleteModal(${record.id})"
-                                        class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition" title="Delete">
+                                        class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition" title="删除">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                     </svg>
@@ -372,18 +410,21 @@
                             <span>${record.response_time_ms || '-'}ms</span>
                             ${record.feedback !== null ?
                                 (record.feedback ?
-                                    '<span class="text-green-500">👍 Helpful</span>' :
-                                    '<span class="text-orange-500">✏️ Needs improvement</span>')
-                                : '<span class="text-gray-400">No feedback</span>'}
+                                    '<span class="text-green-500">👍 有用</span>' :
+                                    '<span class="text-orange-500">✏️ 需改进</span>')
+                                : '<span class="text-gray-400">未评价</span>'}
                             ${record.feedback === false && record.feedback_text ?
-                                '<span class="text-orange-400">Note: ' + escapeHtml(record.feedback_text) + '</span>' : ''}
+                                '<span class="text-orange-400">反馈: ' + escapeHtml(record.feedback_text) + '</span>' : ''}
                         </div>
                     </div>
                 `).join('');
 
-            } catch (error) { console.error('Failed to load history:', error); }
+            } catch (error) {
+                console.error('加载历史记录失败:', error);
+            }
         }
 
+        // 显示历史回答
         function showHistoryAnswer(question, answer) {
             document.getElementById('questionInput').value = decodeURIComponent(question);
             document.getElementById('answerSection').classList.remove('hidden');
@@ -394,53 +435,84 @@
             document.getElementById('matchedDocs').classList.add('hidden');
         }
 
+        // 打开编辑评价弹窗
         function openEditFeedback(qaId, currentFeedback, feedbackText) {
             document.getElementById('editQaId').value = qaId;
             document.getElementById('editFeedbackReason').value = feedbackText ? decodeURIComponent(feedbackText) : '';
+
+            // 设置当前评价状态
             const radios = document.querySelectorAll('input[name="editFeedback"]');
             radios.forEach(radio => {
-                if (currentFeedback === null) radio.checked = false;
-                else radio.checked = radio.value === String(currentFeedback);
+                if (currentFeedback === null) {
+                    radio.checked = false;
+                } else {
+                    radio.checked = radio.value === String(currentFeedback);
+                }
             });
+
             document.getElementById('editFeedbackModal').classList.remove('hidden');
         }
 
-        function closeEditFeedbackModal() { document.getElementById('editFeedbackModal').classList.add('hidden'); }
+        function closeEditFeedbackModal() {
+            document.getElementById('editFeedbackModal').classList.add('hidden');
+        }
 
         async function saveEditFeedback() {
             const qaId = document.getElementById('editQaId').value;
             const selectedRadio = document.querySelector('input[name="editFeedback"]:checked');
-            if (!selectedRadio) { alert('Please select a rating'); return; }
+
+            if (!selectedRadio) {
+                alert('请选择评价');
+                return;
+            }
+
             const isHelpful = selectedRadio.value === 'true';
             const feedbackText = document.getElementById('editFeedbackReason').value.trim();
+
             try {
                 await fetch('/api/qa/feedback', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ qa_id: parseInt(qaId), is_helpful: isHelpful, feedback_text: feedbackText || null })
                 });
+
                 closeEditFeedbackModal();
                 loadHistory();
-            } catch (error) { console.error('Save failed:', error); alert('Save failed'); }
+            } catch (error) {
+                console.error('保存评价失败:', error);
+                alert('保存失败，请重试');
+            }
         }
 
+        // 打开删除确认弹窗
         function openDeleteModal(qaId) {
             document.getElementById('deleteQaId').value = qaId;
             document.getElementById('deleteModal').classList.remove('hidden');
         }
 
-        function closeDeleteModal() { document.getElementById('deleteModal').classList.add('hidden'); }
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.add('hidden');
+        }
 
         async function confirmDelete() {
             const qaId = document.getElementById('deleteQaId').value;
+
             try {
-                const response = await fetch(`/api/qa/record/${qaId}`, { method: 'DELETE' });
-                if (!response.ok) throw new Error('Delete failed');
+                const response = await fetch(`/api/qa/record/${qaId}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) throw new Error('删除失败');
+
                 closeDeleteModal();
                 loadHistory();
-            } catch (error) { console.error('Delete failed:', error); alert('Delete failed'); }
+            } catch (error) {
+                console.error('删除失败:', error);
+                alert('删除失败，请重试');
+            }
         }
 
+        // 页面加载时获取历史记录
         loadHistory();
     </script>
 </body>
