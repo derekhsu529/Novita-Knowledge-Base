@@ -173,6 +173,17 @@ def _extract_title_from_content(path: str, preview: str) -> str:
     return filename.replace("_", " ").replace("-", " ").title()
 
 
+# 中文分类 → 英文映射
+CATEGORY_EN = {
+    "账户与计费": "Account & Billing",
+    "LLM API": "LLM API",
+    "GPU实例": "GPU Instances",
+    "图像/视频生成": "Image/Video Generation",
+    "Serverless": "Serverless",
+    "其他": "General",
+}
+
+
 def _search_manual_kb(keywords: set) -> List[SearchResult]:
     """搜索手工知识库（同步，用于与文件知识库合并）"""
     if not DATABASE_PATH.exists():
@@ -202,8 +213,9 @@ def _search_manual_kb(keywords: set) -> List[SearchResult]:
             score += min(a_lower.count(kw), 3)
 
         if score > 0:
+            cat_en = CATEGORY_EN.get(row['category'], row['category'])
             results.append(SearchResult(
-                title=f"[FAQ] {row['question']}",
+                title=f"[FAQ - {cat_en}] #{row['id']}",
                 path=f"manual_kb:{row['id']}",
                 url="",
                 score=score + 10,  # 手工知识库优先
