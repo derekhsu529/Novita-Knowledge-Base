@@ -56,3 +56,22 @@ async def delete_entry(entry_id: int):
     if not success:
         raise HTTPException(status_code=404, detail="条目不存在")
     return {"message": "删除成功"}
+
+
+@router.post("/reset")
+async def reset_manual_kb():
+    """清空手工知识库并重新导入 FAQ 种子数据"""
+    import aiosqlite
+    from ..config import DATABASE_PATH
+    from ..import_faq import FAQ_DATA
+
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        await db.execute("DELETE FROM manual_kb")
+        for faq in FAQ_DATA:
+            await db.execute(
+                "INSERT INTO manual_kb (category, question, answer) VALUES (?, ?, ?)",
+                (faq["category"], faq["question"], faq["answer"])
+            )
+        await db.commit()
+
+    return {"message": f"已重置，导入 {len(FAQ_DATA)} 条FAQ"}
