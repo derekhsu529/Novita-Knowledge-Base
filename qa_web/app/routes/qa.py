@@ -1,6 +1,7 @@
 """问答 API 路由"""
 
 import time
+from datetime import datetime, timezone, timedelta
 from typing import List
 from fastapi import APIRouter, HTTPException, Query
 from ..models import AskRequest, AskResponse, FeedbackRequest, FeedbackResponse, QARecord, MatchedDoc
@@ -12,6 +13,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def get_beijing_time_str() -> str:
+    """获取北京时间字符串（UTC+8）"""
+    beijing_tz = timezone(timedelta(hours=8))
+    return datetime.now(beijing_tz).strftime("%Y-%m-%d %H:%M:%S")
 
 
 @router.post("/ask", response_model=AskResponse)
@@ -56,7 +63,7 @@ async def ask_question(request: AskRequest):
             answer=answer,
             matched_docs=[MatchedDoc(**doc) for doc in matched_docs],
             response_time_ms=response_time_ms,
-            created_at=time.strftime("%Y-%m-%d %H:%M:%S")
+            created_at=get_beijing_time_str()
         )
 
     except Exception as e:
@@ -85,7 +92,7 @@ async def submit_feedback(request: FeedbackRequest):
             id=feedback_id,
             qa_id=request.qa_id,
             is_helpful=request.is_helpful,
-            created_at=time.strftime("%Y-%m-%d %H:%M:%S")
+            created_at=get_beijing_time_str()
         )
 
     except Exception as e:
