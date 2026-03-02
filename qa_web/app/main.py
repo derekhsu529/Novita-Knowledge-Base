@@ -30,14 +30,20 @@ async def lifespan(app: FastAPI):
     try:
         index = _load_index()
         count = 0
+        errors = 0
         for page in index["pages"]:
             doc_path = KNOWLEDGE_BASE_DIR / page["path"]
             if doc_path.exists():
-                _read_kb_file_cached(str(doc_path))
-                count += 1
-        logger.info(f"知识库预加载完成：{count} 个文件已缓存")
+                try:
+                    _read_kb_file_cached(str(doc_path))
+                    count += 1
+                except Exception as e:
+                    errors += 1
+                    logger.warning(f"预加载文件失败 {page['path']}: {e}")
+        logger.info(f"知识库预加载完成：{count} 个文件成功，{errors} 个失败")
     except Exception as e:
         logger.error(f"知识库预加载失败: {e}")
+        # 不阻止应用启动
 
     yield
 

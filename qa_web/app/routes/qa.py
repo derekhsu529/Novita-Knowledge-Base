@@ -1,8 +1,6 @@
 """问答 API 路由"""
 
 import time
-import uuid
-import asyncio
 from typing import List
 from fastapi import APIRouter, HTTPException, Query
 from ..models import AskRequest, AskResponse, FeedbackRequest, FeedbackResponse, QARecord, MatchedDoc
@@ -43,21 +41,17 @@ async def ask_question(request: AskRequest):
             for r in search_results
         ]
 
-        # 6. 生成临时 ID 并后台保存记录（不阻塞响应）
-        temp_id = str(uuid.uuid4())
-        asyncio.create_task(
-            save_qa_record_background(
-                temp_id=temp_id,
-                question=request.question,
-                answer=answer,
-                matched_docs=matched_docs,
-                response_time_ms=response_time_ms
-            )
+        # 6. 保存记录（同步保存，快速完成）
+        qa_id = await save_qa_record(
+            question=request.question,
+            answer=answer,
+            matched_docs=matched_docs,
+            response_time_ms=response_time_ms
         )
 
-        # 7. 立即返回响应
+        # 7. 返回响应
         return AskResponse(
-            id=temp_id,
+            id=qa_id,
             question=request.question,
             answer=answer,
             matched_docs=[MatchedDoc(**doc) for doc in matched_docs],
@@ -66,6 +60,7 @@ async def ask_question(request: AskRequest):
         )
 
     except Exception as e:
+        logger.error(f"处理问题时发生错误: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"处理问题时发生错误: {str(e)}")
 
 
@@ -109,13 +104,3 @@ async def delete_record(qa_id: int):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"删除失败: {str(e)}")
-
-
-async def save_qa_record_background(temp_id: str, question: str, answer: str,
-                                    matched_docs: List[dict], response_time_ms: int):
-    """后台保存 QA 记录"""
-    try:
-        qa_id = await save_qa_record(question, answer, matched_docs, response_time_ms)
-        logger.info(f"QA 记录保存成功: temp_id={temp_id}, qa_id={qa_id}, response_time={response_time_ms}ms")
-    except Exception as e:
-        logger.error(f"QA 记录保存失败: temp_id={temp_id}, error={e}")
