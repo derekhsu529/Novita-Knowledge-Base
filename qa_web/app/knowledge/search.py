@@ -1,4 +1,4 @@
-"""知识库搜索模块"""
+"""知识库搜索模块 - 基于 test_qa.py 提取"""
 
 import json
 import sqlite3
@@ -18,18 +18,16 @@ if TAVILY_ENABLED:
         TAVILY_ENABLED = False
         print("⚠️  tavily-python 未安装，Tavily 搜索已禁用")
 
-# 同义词/相关词映射表（Novita AI 产品相关）
+# 同义词/相关词映射表
 SYNONYMS = {
-    "llm": ["chat", "completion", "gpt", "claude", "gemini", "qwen", "llama", "deepseek", "model", "语言模型"],
-    "gpu": ["显卡", "算力", "instance", "serverless", "nvidia", "a100", "h100", "l40s"],
-    "sandbox": ["沙箱", "agent", "代理", "环境", "container", "容器"],
-    "api": ["接口", "调用", "sdk", "endpoint", "端点"],
-    "价格": ["price", "pricing", "cost", "费用", "收费", "计费", "billing"],
-    "集成": ["integration", "cursor", "continue", "langchain", "llamaindex", "framework"],
-    "图片": ["image", "img", "picture", "generation", "flux", "stable diffusion"],
+    "视频": ["video", "i2v", "t2v", "v2v", "kling", "vidu", "wan", "sora", "veo", "hailuo", "minimax"],
+    "图片": ["image", "img", "picture", "t2i", "i2i", "flux", "stable", "midjourney", "dall"],
+    "音频": ["audio", "speech", "tts", "voice", "elevenlabs", "fish"],
+    "文本": ["text", "llm", "chat", "gpt", "claude", "gemini", "qwen", "llama"],
+    "价格": ["price", "pricing", "cost", "费用", "收费"],
+    "调用": ["api", "sdk", "接口", "使用", "集成"],
+    "vscode": ["vs code", "ide", "编辑器", "claude code", "插件"],
     "模型": ["model", "models"],
-    "认证": ["auth", "authentication", "api key", "token", "密钥"],
-    "错误": ["error", "issue", "problem", "bug", "fail", "故障", "报错"],
 }
 
 # 缓存知识库索引
@@ -144,7 +142,16 @@ def _search_in_content(content: str, keywords: set) -> int:
 
 
 def search_knowledge_base(query: str, max_docs: int = 8) -> List[SearchResult]:
-    """搜索知识库，返回最相关的文档列表"""
+    """
+    搜索知识库，返回最相关的文档列表
+
+    Args:
+        query: 用户查询
+        max_docs: 返回的最大文档数
+
+    Returns:
+        SearchResult 列表
+    """
     index = _load_index()
     keywords = _expand_keywords(query)
 
@@ -200,6 +207,7 @@ def search_knowledge_base(query: str, max_docs: int = 8) -> List[SearchResult]:
     results = []
     for score, doc, preview in top_docs:
         title = doc.get("title", "").strip()
+        # 如果标题为空或是 Untitled，从内容中提取标题
         if not title or title.lower() == "untitled":
             title = _extract_title_from_content(doc["path"], preview)
         results.append(SearchResult(
@@ -228,36 +236,30 @@ def _extract_title_from_content(path: str, preview: str) -> str:
     """从文档内容中提取标题"""
     lines = preview.split('\n')
 
+    # 先尝试找 # 开头的标题行，或 === 下划线标题
     for i, line in enumerate(lines):
         stripped = line.strip()
+        # # 开头的标题
         if stripped.startswith('#'):
             title = stripped.lstrip('#').strip()
             if title:
                 return title
+        # 检查下一行是否是 === 或 ---（Markdown setext 标题格式）
         if i + 1 < len(lines):
             next_line = lines[i + 1].strip()
             if next_line and (next_line.startswith('===') or next_line.startswith('---')):
                 if stripped and not stripped.startswith('```'):
                     return stripped
 
+    # 如果没找到标题，取第一行非空文本
     for line in lines:
         stripped = line.strip()
         if stripped and not stripped.startswith('===') and not stripped.startswith('---') and not stripped.startswith('```'):
             return stripped[:60] + ('...' if len(stripped) > 60 else '')
 
+    # 最后使用文件名
     filename = path.replace("\\", "/").split("/")[-1].rsplit(".", 1)[0]
     return filename.replace("_", " ").replace("-", " ").title()
-
-
-# 中文分类 → 英文映射
-CATEGORY_EN = {
-    "账户与计费": "Account & Billing",
-    "LLM API": "LLM API",
-    "GPU实例": "GPU Instances",
-    "图像/视频生成": "Image/Video Generation",
-    "Serverless": "Serverless",
-    "其他": "General",
-}
 
 
 def _search_manual_kb(keywords: set) -> List[SearchResult]:
@@ -289,9 +291,9 @@ def _search_manual_kb(keywords: set) -> List[SearchResult]:
             score += min(a_lower.count(kw), 3)
 
         if score > 0:
-            cat_en = CATEGORY_EN.get(row['category'], row['category'])
+            # 手工知识库额外加权
             results.append(SearchResult(
-                title=f"[FAQ - {cat_en}] #{row['id']}",
+                title=f"[FAQ] {row['question']}",
                 path=f"manual_kb:{row['id']}",
                 url="",
                 score=score + 10,  # 手工知识库优先

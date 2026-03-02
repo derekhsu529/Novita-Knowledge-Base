@@ -23,8 +23,8 @@ else:
     DATABASE_PATH = BASE_DIR / "data" / "qa.db"  # 本地开发
 
 # AI API 配置
-API_KEY = os.getenv("API_KEY", "")
-ANTHROPIC_BASE_URL = os.getenv("ANTHROPIC_BASE_URL", "https://api.ppinfra.com/anthropic")
+API_KEY = os.getenv("API_KEY", os.getenv("PPIO_API_KEY", ""))  # 兼容旧环境变量
+ANTHROPIC_BASE_URL = os.getenv("ANTHROPIC_BASE_URL", "https://api.jiekou.ai/anthropic")
 AI_MODEL = os.getenv("AI_MODEL", "claude-sonnet-4-5-20250929")
 
 # 服务器配置
