@@ -5,9 +5,14 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
+import logging
 
 from .database import init_db
 from .routes import qa_router, stats_router, manual_kb_router
+from .knowledge.search import _load_index, _read_kb_file_cached
+from .config import KNOWLEDGE_BASE_DIR
+
+logger = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).parent.parent
 
@@ -15,16 +20,33 @@ BASE_DIR = Path(__file__).parent.parent
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """应用生命周期管理"""
-    print("初始化数据库...")
+    # 1. 初始化数据库
+    logger.info("初始化数据库...")
     await init_db()
-    print("数据库初始化完成")
+    logger.info("数据库初始化完成")
+
+    # 2. 预加载知识库到缓存
+    logger.info("预加载知识库...")
+    try:
+        index = _load_index()
+        count = 0
+        for page in index["pages"]:
+            doc_path = KNOWLEDGE_BASE_DIR / page["path"]
+            if doc_path.exists():
+                _read_kb_file_cached(str(doc_path))
+                count += 1
+        logger.info(f"知识库预加载完成：{count} 个文件已缓存")
+    except Exception as e:
+        logger.error(f"知识库预加载失败: {e}")
+
     yield
-    print("应用关闭")
+
+    logger.info("应用关闭")
 
 
 app = FastAPI(
-    title="Novita AI 知识库问答",
-    description="基于 Novita AI 知识库的智能问答系统",
+    title="接口AI 知识库问答",
+    description="基于 jiekou.ai 知识库的智能问答系统",
     version="1.0.0",
     lifespan=lifespan
 )

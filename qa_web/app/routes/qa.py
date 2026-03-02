@@ -1,12 +1,17 @@
 """问答 API 路由"""
 
 import time
+import uuid
+import asyncio
 from typing import List
 from fastapi import APIRouter, HTTPException, Query
 from ..models import AskRequest, AskResponse, FeedbackRequest, FeedbackResponse, QARecord, MatchedDoc
 from ..database import save_qa_record, save_feedback, get_qa_history, delete_qa_record
-from ..knowledge import search_knowledge_base, generate_answer
-from ..knowledge.search import get_context_for_qa
+from ..knowledge import generate_answer
+from ..knowledge.search import search_knowledge_base_async, get_context_for_qa
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -20,8 +25,8 @@ async def ask_question(request: AskRequest):
     start_time = time.time()
 
     try:
-        # 1. 搜索知识库
-        search_results = search_knowledge_base(request.question)
+        # 1. 搜索知识库（异步并行）
+        search_results = await search_knowledge_base_async(request.question)
 
         # 2. 获取上下文
         context = get_context_for_qa(search_results)
@@ -32,21 +37,27 @@ async def ask_question(request: AskRequest):
         # 4. 计算响应时间
         response_time_ms = int((time.time() - start_time) * 1000)
 
-        # 5. 保存记录
+        # 5. 准备匹配文档
         matched_docs = [
             {"title": r.title, "url": r.url, "score": r.score}
             for r in search_results
         ]
-        qa_id = await save_qa_record(
-            question=request.question,
-            answer=answer,
-            matched_docs=matched_docs,
-            response_time_ms=response_time_ms
+
+        # 6. 生成临时 ID 并后台保存记录（不阻塞响应）
+        temp_id = str(uuid.uuid4())
+        asyncio.create_task(
+            save_qa_record_background(
+                temp_id=temp_id,
+                question=request.question,
+                answer=answer,
+                matched_docs=matched_docs,
+                response_time_ms=response_time_ms
+            )
         )
 
-        # 6. 返回响应
+        # 7. 立即返回响应
         return AskResponse(
-            id=qa_id,
+            id=temp_id,
             question=request.question,
             answer=answer,
             matched_docs=[MatchedDoc(**doc) for doc in matched_docs],
@@ -98,3 +109,13 @@ async def delete_record(qa_id: int):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"删除失败: {str(e)}")
+
+
+async def save_qa_record_background(temp_id: str, question: str, answer: str,
+                                    matched_docs: List[dict], response_time_ms: int):
+    """后台保存 QA 记录"""
+    try:
+        qa_id = await save_qa_record(question, answer, matched_docs, response_time_ms)
+        logger.info(f"QA 记录保存成功: temp_id={temp_id}, qa_id={qa_id}, response_time={response_time_ms}ms")
+    except Exception as e:
+        logger.error(f"QA 记录保存失败: temp_id={temp_id}, error={e}")
