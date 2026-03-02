@@ -3,9 +3,20 @@
 import json
 import sqlite3
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Optional
 from dataclasses import dataclass
-from ..config import KNOWLEDGE_BASE_DIR, DATABASE_PATH
+from ..config import (KNOWLEDGE_BASE_DIR, DATABASE_PATH,
+                      TAVILY_API_KEY, TAVILY_ENABLED, TAVILY_MAX_RESULTS,
+                      TAVILY_SEARCH_DEPTH, TAVILY_TIMEOUT)
+
+# 条件导入 Tavily 客户端
+if TAVILY_ENABLED:
+    try:
+        from tavily import TavilyClient
+        _tavily_client = None
+    except ImportError:
+        TAVILY_ENABLED = False
+        print("⚠️  tavily-python 未安装，Tavily 搜索已禁用")
 
 # 同义词/相关词映射表（Novita AI 产品相关）
 SYNONYMS = {
@@ -60,6 +71,66 @@ def _expand_keywords(query: str) -> set:
                 expanded.update(synonyms)
 
     return expanded
+
+
+def _get_tavily_client() -> Optional['TavilyClient']:
+    """获取 Tavily 客户端（单例模式）"""
+    global _tavily_client
+    if not TAVILY_ENABLED or not TAVILY_API_KEY:
+        return None
+
+    if _tavily_client is None:
+        from tavily import TavilyClient
+        _tavily_client = TavilyClient(api_key=TAVILY_API_KEY)
+
+    return _tavily_client
+
+
+def _search_tavily(query: str) -> List[SearchResult]:
+    """使用 Tavily 搜索网络资源（带容错）"""
+    client = _get_tavily_client()
+    if not client:
+        return []
+
+    try:
+        response = client.search(
+            query=query,
+            search_depth=TAVILY_SEARCH_DEPTH,
+            max_results=TAVILY_MAX_RESULTS
+        )
+
+        results = []
+        keywords = _expand_keywords(query)
+
+        for idx, item in enumerate(response.get('results', [])):
+            # 计算基础分数
+            score = 5  # Tavily 基础分
+
+            # 位置加权
+            if idx == 0:
+                score += 2
+            elif idx == 1:
+                score += 1
+
+            # 标题关键词匹配
+            title_lower = item.get('title', '').lower()
+            if any(kw in title_lower for kw in keywords):
+                score += 3
+
+            results.append(SearchResult(
+                title=f"[Web] {item.get('title', 'Untitled')}",
+                path=f"tavily:{idx}",
+                url=item.get('url', ''),
+                score=score,
+                content_preview=item.get('content', '')[:500]
+            ))
+
+        return results
+
+    except Exception as e:
+        # 静默失败，不影响本地搜索
+        print(f"⚠️  Tavily 搜索失败: {e}")
+        return []
 
 
 def _search_in_content(content: str, keywords: set) -> int:
@@ -142,6 +213,11 @@ def search_knowledge_base(query: str, max_docs: int = 8) -> List[SearchResult]:
     # 合并手工知识库搜索结果
     manual_results = _search_manual_kb(keywords)
     results.extend(manual_results)
+
+    # 集成 Tavily 网络搜索（如果启用）
+    if TAVILY_ENABLED:
+        tavily_results = _search_tavily(query)
+        results.extend(tavily_results)
 
     # 按分数重新排序，取 top max_docs
     results.sort(key=lambda x: x.score, reverse=True)
@@ -227,12 +303,23 @@ def _search_manual_kb(keywords: set) -> List[SearchResult]:
 
 
 def get_context_for_qa(results: List[SearchResult]) -> str:
-    """将搜索结果转换为问答上下文"""
+    """将搜索结果转换为问答上下文（支持 Tavily）"""
     contents = []
     for result in results:
         if result.path.startswith("manual_kb:"):
+            # 手工知识库条目，内容已在 content_preview 中
             contents.append(f"### {result.title}\n{result.content_preview}")
+
+        elif result.path.startswith("tavily:"):
+            # Tavily 网络搜索结果
+            contents.append(
+                f"### {result.title}\n"
+                f"Source: {result.url}\n"
+                f"{result.content_preview}"
+            )
+
         else:
+            # 爬虫知识库
             doc_path = KNOWLEDGE_BASE_DIR / result.path
             if doc_path.exists():
                 with open(doc_path, encoding='utf-8') as f:

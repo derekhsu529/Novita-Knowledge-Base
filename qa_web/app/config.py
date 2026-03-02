@@ -30,3 +30,10 @@ AI_MODEL = os.getenv("AI_MODEL", "claude-sonnet-4-5-20250929")
 # 服务器配置
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "8080"))
+
+# Tavily 搜索配置
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
+TAVILY_ENABLED = os.getenv("TAVILY_ENABLED", "false").lower() == "true"
+TAVILY_MAX_RESULTS = int(os.getenv("TAVILY_MAX_RESULTS", "3"))
+TAVILY_SEARCH_DEPTH = os.getenv("TAVILY_SEARCH_DEPTH", "basic")
+TAVILY_TIMEOUT = int(os.getenv("TAVILY_TIMEOUT", "5"))
