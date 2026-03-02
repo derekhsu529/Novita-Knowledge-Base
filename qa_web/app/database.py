@@ -111,6 +111,8 @@ async def delete_qa_record(qa_id: int) -> bool:
 
 async def get_qa_history(limit: int = 20, offset: int = 0) -> List[Dict]:
     """获取问答历史记录"""
+    from datetime import datetime, timezone, timedelta
+
     async with aiosqlite.connect(DATABASE_PATH) as db:
         db.row_factory = aiosqlite.Row
         cursor = await db.execute(
@@ -123,7 +125,26 @@ async def get_qa_history(limit: int = 20, offset: int = 0) -> List[Dict]:
             (limit, offset)
         )
         rows = await cursor.fetchall()
-        return [dict(row) for row in rows]
+
+        # 转换时间为北京时间
+        beijing_tz = timezone(timedelta(hours=8))
+        result = []
+        for row in rows:
+            record = dict(row)
+            if record.get('created_at'):
+                try:
+                    # 解析 UTC 时间字符串
+                    utc_time = datetime.strptime(record['created_at'], "%Y-%m-%d %H:%M:%S")
+                    utc_time = utc_time.replace(tzinfo=timezone.utc)
+                    # 转换为北京时间
+                    beijing_time = utc_time.astimezone(beijing_tz)
+                    record['created_at'] = beijing_time.strftime("%Y-%m-%d %H:%M:%S")
+                except Exception:
+                    # 如果转换失败，保留原始时间
+                    pass
+            result.append(record)
+
+        return result
 
 
 async def get_stats_overview() -> Dict:
